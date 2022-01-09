@@ -11,7 +11,7 @@
       #Edit below
           $csv=(import-csv .\usersDB.csv).employeenumber
           $Email_Login=""
-          $password=get-content encrypt.txt | converto-securestring
+          $password=get-content .\encrypt.txt | converto-securestring
           $credential=new-object System.Management.Automation.PSCredential -argumentlist $Email_Login,Password
           $from=""
           $deliverto=""
