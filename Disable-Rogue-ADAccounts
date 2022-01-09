@@ -1,0 +1,22 @@
+<#SCRIPT TO QUERY AD USERS EMPLOYEE NUMBER; DISABLES ROGUE ACCOUNTS; EMAILS RESULTS
+  Create a scedule task for this hourly is best
+  
+  This script to be coupled with CreatenewADuser-Function.ps1
+  #>
+      #Edit below
+          $csv=(import-csv .\usersDB.csv).employeenumber
+          $login=" " 
+          $pw=""
+          $password=ConvertTo-SecureString $pw -asplaintext -force
+          $credential=new-object System.Management.Automation.PSCredential -argumentlist $login,$password
+          $from=""
+          $deliverto=""
+          $smtpserver=""
+          $searchbase="DC=domain,DC=local"
+
+    #Do no edit below
+          $users=Get-ADUser -SearchBase $searchbase  -filter * -Properties * | ?{$_.employeenumber -notin $csv -and $_.enabled -eq $true} | select -ExpandProperty name
+          foreach ($user in $users) {
+          Disable-ADAccount $user
+          Send-MailMessage -From $from -to $deliverto -Subject "$user was found to be a rogue account creation" -body "$user was disabled" -credential $credential -SmtpServer $smtpserver -usessl -Port 587
+          }
