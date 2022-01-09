@@ -3,20 +3,26 @@
   
   This script to be coupled with CreatenewADuser-Function.ps1
   #>
+    #secure password
+      $secure=read-host -assecurestring
+      $ecrypt=converfrom-securestring -securestring $secure
+      $encrypt | set-content encrypt.txt
+      
       #Edit below
           $csv=(import-csv .\usersDB.csv).employeenumber
-          $login=" " 
-          $pw=""
-          $password=ConvertTo-SecureString $pw -asplaintext -force
-          $credential=new-object System.Management.Automation.PSCredential -argumentlist $login,$password
+          $login=""
+          $password=get-content encrypt.txt | converto-securestring
+          $credential=new-object System.Management.Automation.PSCredential -argumentlist $login,Password
           $from=""
           $deliverto=""
           $smtpserver=""
           $searchbase="DC=domain,DC=local"
 
     #Do no edit below
-          $users=Get-ADUser -SearchBase $searchbase  -filter * -Properties * | ?{$_.employeenumber -notin $csv -and $_.enabled -eq $true} | select -ExpandProperty name
+          $users=Get-ADUser -SearchBase $searchbase  -filter * -Properties employeenumber,samaccountname,name | ?{$_.employeenumber -notin $csv -and $_.enabled -eq $true}
           foreach ($user in $users) {
-          Disable-ADAccount $user
-          Send-MailMessage -From $from -to $deliverto -Subject "$user was found to be a rogue account creation" -body "$user was disabled" -credential $credential -SmtpServer $smtpserver -usessl -Port 587
+          $name=$user.name
+          $sam=$user.samaccountname
+          Disable-ADAccount $sam
+          Send-MailMessage -From $from -to $deliverTo -Subject "$name was found to be a rogue account creation" -body "$name was disabled" -credential $credential -SmtpServer $SMTPserver -usessl -Port 587
           }
